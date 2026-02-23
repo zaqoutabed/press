@@ -1,46 +1,13 @@
 <template>
-	<div
-		v-if="!data || data[0].date === undefined"
-		class="flex h-5/6 items-center justify-center"
-	>
+	<div v-if="!data || data[0].date === undefined" class="flex h-5/6 items-center justify-center">
 		<div class="text-base text-gray-700">No data</div>
 	</div>
-<<<<<<< HEAD
-	<div v-else class="mx-4 mt-8" v-for="type in uptimeTypes" :key="type.key">
-		<div class="flex h-10 justify-between">
-			<div
-				v-for="d in data"
-				:key="d.date"
-				class="w-1.5 rounded"
-				:class="[
-					d[type.key] === undefined
-						? 'bg-white'
-						: d[type.key] === 1
-							? 'bg-green-500'
-							: d[type.key] === 0
-								? 'bg-red-500'
-								: 'bg-yellow-500',
-				]"
-				:title="
-					d[type.key]
-						? `${formatDate(d.date)} | Uptime: ${(d.value * 100).toFixed(2)}%`
-						: ''
-				"
-			></div>
-=======
 	<template v-else-if="filteredData?.length > 0">
-		<div
-			class="w-full h-full flex flex-col justify-center items-center px-5 py-3"
-		>
-			<div
-				class="flex justify-between mb-1 w-full text-[11px] text-gray-700 font-normal mt-1"
-			>
+		<div class="w-full h-full flex flex-col justify-center items-center px-5 py-3">
+			<div class="flex justify-between mb-1 w-full text-[11px] text-gray-700 font-normal mt-1">
 				<div>
 					<template v-if="hoveringOn.key">
-						<span
-							class="contrast-75 font-bold"
-							:class="hoveringOn.colour || []"
-						>
+						<span class="contrast-75 font-bold" :class="hoveringOn.colour || []">
 							{{
 								(hoveringOn.value * 100).toFixed(
 									hoveringOn.value === 0 || hoveringOn.value === 1 ? 0 : 2,
@@ -53,41 +20,22 @@
 				</div>
 				<div class="text-[11px] whitespace-nowrap flex gap-1 items-center">
 					<span>{{ subtitle }}</span>
-					<Tooltip
-						:text="`Aggregated over ${firstDateTime} to ${lastDateTime}`"
-					>
+					<Tooltip :text="`Aggregated over ${firstDateTime} to ${lastDateTime}`">
 						<Help />
 					</Tooltip>
 				</div>
 			</div>
 			<div class="flex items-center justify-center w-full h-1/3 max-h-24 gap-1">
-				<Button
-					v-if="chunkedData.length > 1"
-					@click="scrollPrev"
-					:disabled="currentChunkIndex === 0"
-					class="rounded-full h-8 w-8"
-				>
+				<Button v-if="chunkedData.length > 1" @click="scrollPrev" :disabled="currentChunkIndex === 0"
+					class="rounded-full h-8 w-8">
 					<Left />
 				</Button>
 
-				<div
-					ref="scrollContainer"
-					class="flex h-full overflow-x-auto snap-x snap-mandatory no-scrollbar flex-grow"
-				>
-					<div
-						v-for="(group, index) in chunkedData"
-						:key="index"
-						class="flex w-full flex-shrink-0 snap-start justify-center"
-						:class="chunkedData.length > 1 && 'px-2'"
-					>
-						<div
-							v-for="d in group"
-							:key="d.date"
-							@mouseenter="inspectBar(d)"
-							@mouseleave="clearInspect()"
-							class="rounded-full flex-shrink-0 h-full"
-							:style="`width: ${barWidth};`"
-							:class="[
+				<div ref="scrollContainer" class="flex h-full overflow-x-auto snap-x snap-mandatory no-scrollbar flex-grow">
+					<div v-for="(group, index) in chunkedData" :key="index"
+						class="flex w-full flex-shrink-0 snap-start justify-center" :class="chunkedData.length > 1 && 'px-2'">
+						<div v-for="d in group" :key="d.date" @mouseenter="inspectBar(d)" @mouseleave="clearInspect()"
+							class="rounded-full flex-shrink-0 h-full" :style="`width: ${barWidth};`" :class="[
 								'hover:brightness-[110%] border-r border-white',
 								d.value === undefined
 									? 'bg-gray-100'
@@ -96,56 +44,36 @@
 										: d.value === 0
 											? 'bg-red-500'
 											: 'bg-yellow-500',
-							]"
-						>
-							<Tooltip
-								placement="bottom"
-								:text="`${hoveringOn.percentValue}% aggregated for ${interval} ending ${hoveringOn.prettyDate}`"
-							>
+							]">
+							<Tooltip placement="bottom"
+								:text="`${hoveringOn.percentValue}% aggregated for ${interval} ending ${hoveringOn.prettyDate}`">
 								<div class="h-full w-full" />
 							</Tooltip>
 						</div>
 					</div>
 				</div>
 
-				<Button
-					v-if="chunkedData.length > 1"
-					@click="scrollNext"
-					:disabled="currentChunkIndex === chunkedData.length - 1"
-					class="rounded-full h-8 w-8"
-				>
+				<Button v-if="chunkedData.length > 1" @click="scrollNext"
+					:disabled="currentChunkIndex === chunkedData.length - 1" class="rounded-full h-8 w-8">
 					<Right />
 				</Button>
 			</div>
-			<div
-				class="flex justify-between w-full text-[11px] text-gray-700 font-normal mt-1"
-			>
-				<div
-					class="flex-shrink transition-all duration-300 bg-gray-200"
-					:class="highlightDates ? 'bg-opacity-100' : 'bg-opacity-0'"
-				>
+			<div class="flex justify-between w-full text-[11px] text-gray-700 font-normal mt-1">
+				<div class="flex-shrink transition-all duration-300 bg-gray-200"
+					:class="highlightDates ? 'bg-opacity-100' : 'bg-opacity-0'">
 					{{ firstDateTime }}
 				</div>
 
-				<div
-					class="w-fit flex-shrink transition-all duration-300 bg-gray-200"
-					:class="highlightDates ? 'bg-opacity-100' : 'bg-opacity-0'"
-				>
+				<div class="w-fit flex-shrink transition-all duration-300 bg-gray-200"
+					:class="highlightDates ? 'bg-opacity-100' : 'bg-opacity-0'">
 					{{ lastDateTime }}
 				</div>
 			</div>
->>>>>>> 02d834d53 (fix(uptime-chart): Add chunking and pagination)
 		</div>
-	</div>
+	</template>
 </template>
 
 <script>
-<<<<<<< HEAD
-import { DateTime } from 'luxon';
-export default {
-	name: 'SiteUptime',
-	props: ['data', 'loading'],
-=======
 import dayjs from '../../utils/dayjs';
 import { icon } from '../../utils/components';
 import { Tooltip, debounce } from 'frappe-ui';
@@ -188,7 +116,6 @@ export default {
 		const el = this.$refs.scrollContainer;
 		el?.removeEventListener('scroll', this.handleScroll);
 	},
->>>>>>> 02d834d53 (fix(uptime-chart): Add chunking and pagination)
 	computed: {
 		subtitle() {
 			if (!this.data) return '';
@@ -204,9 +131,6 @@ export default {
 			}
 			const average = ((total / i) * 100).toFixed(2);
 
-<<<<<<< HEAD
-			return !isNaN(average) ? `Average: ${average}%` : '';
-=======
 			return !isNaN(average) ? `${average}% Overall Uptime` : '';
 		},
 		interval() {
@@ -247,14 +171,10 @@ export default {
 			if (!this.filteredData?.length) return '0%';
 			const percentageWidth = 100 / this.filteredData.length;
 			return Math.max(percentageWidth, (100 / this.chunkSize).toFixed(2)) + '%';
->>>>>>> 02d834d53 (fix(uptime-chart): Add chunking and pagination)
 		},
 	},
 	methods: {
 		formatDate(date) {
-<<<<<<< HEAD
-			return DateTime.fromSQL(date).toLocaleString(DateTime.DATETIME_FULL);
-=======
 			return dayjs(date).format('D MMM YYYY, hh:mm a');
 		},
 		inspectBar({ date, value }) {
@@ -276,7 +196,6 @@ export default {
 				prettyDate: null,
 				colour: null,
 			};
->>>>>>> 02d834d53 (fix(uptime-chart): Add chunking and pagination)
 		},
 		scrollNext() {
 			if (this.currentChunkIndex >= this.chunkedData.length - 1) return;

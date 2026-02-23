@@ -120,7 +120,10 @@
 </template>
 
 <script>
-import { DateTime } from 'luxon';
+import dayjs from '../../utils/dayjs';
+import { icon } from '../../utils/components';
+import { Tooltip, debounce } from 'frappe-ui';
+
 export default {
 	name: 'SiteUptime',
 	props: ['data', 'loading'],
@@ -160,20 +163,15 @@ export default {
 		el?.removeEventListener('scroll', this.handleScroll);
 	},
 	computed: {
-		uptimeTypes() {
-			return [{ key: 'value', label: 'Web' }];
-		},
 		subtitle() {
-			if (!this.data) return '';
-
 			let total = 0;
 			let i = 0;
-			for (; i < this.data.length; i++) {
+			for (; i < this.filteredData.length; i++) {
 				// there could be empty objects at the end of the array
 				// so we don't have to count them
-				if (typeof this.data[i].value !== 'number') break;
+				if (typeof this.filteredData[i].value !== 'number') break;
 
-				total += this.data[i].value;
+				total += this.filteredData[i].value;
 			}
 			const average = ((total / i) * 100).toFixed(2);
 
@@ -221,8 +219,77 @@ export default {
 	},
 	methods: {
 		formatDate(date) {
-			return DateTime.fromSQL(date).toLocaleString(DateTime.DATETIME_FULL);
+			return dayjs(date).format('D MMM YYYY, hh:mm a');
+		},
+		inspectBar({ date, value }) {
+			const prettyDate = this.formatDate(date);
+			const percentValue = (value * 100).toFixed(2);
+			const colour =
+				value === 1
+					? 'text-green-500'
+					: value === 0
+						? 'text-red-500'
+						: 'text-yellow-500';
+
+			this.hoveringOn = { key: date, value, percentValue, prettyDate, colour };
+		},
+		clearInspect() {
+			this.hoveringOn = {
+				key: null,
+				value: null,
+				prettyDate: null,
+				colour: null,
+			};
+		},
+		scrollNext() {
+			if (this.currentChunkIndex >= this.chunkedData.length - 1) return;
+			this.currentChunkIndex++;
+			this.scrollToCurrentChunk();
+		},
+		scrollPrev() {
+			if (this.currentChunkIndex <= 0) return;
+			this.currentChunkIndex--;
+			this.scrollToCurrentChunk();
+		},
+		handleScroll: debounce(() => {
+			const el = this?.$refs.scrollContainer;
+			if (!el) return;
+
+			const index = Math.round(el.scrollLeft / el.clientWidth);
+			this.currentChunkIndex = index;
+		}, 500),
+		scrollToCurrentChunk() {
+			const el = this.$refs.scrollContainer;
+			if (!el) return;
+
+			el.scrollTo({
+				left: el.clientWidth * this.currentChunkIndex,
+				behavior: 'smooth',
+			});
+		},
+	},
+	watch: {
+		currentChunkIndex() {
+			this.highlightDates = true;
+
+			clearTimeout(this._highlightTimeout);
+
+			this._highlightTimeout = setTimeout(() => {
+				this.highlightDates = false;
+			}, 300);
 		},
 	},
 };
 </script>
+<style>
+.no-scrollbar::-webkit-scrollbar {
+	display: none;
+}
+
+.no-scrollbar {
+	-ms-overflow-style: none;
+	/* IE + Edge */
+	scrollbar-width: none;
+	/* Firefox */
+}
+</style>

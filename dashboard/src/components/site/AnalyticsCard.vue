@@ -5,6 +5,7 @@
 		:class="[
 			'rounded-md border duration-700 ring-blue-500 flex flex-col',
 			shouldHighlight && 'ring-1',
+			span2 && 'sm:col-span-2 h-44',
 		]"
 	>
 		<div class="flex h-12 items-center justify-between border-b px-5 gap-2">
@@ -19,7 +20,6 @@
 					</Tooltip>
 				</div>
 			</div>
-
 			<slot name="action"></slot>
 		</div>
 
@@ -33,7 +33,7 @@ import { icon } from '../../utils/components';
 
 export default {
 	name: 'AnalyticsCard',
-	props: ['title'],
+	props: ['title', 'span2'],
 	emits: ['share-card'],
 	components: {
 		Tooltip,

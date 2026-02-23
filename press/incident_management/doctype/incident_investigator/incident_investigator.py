@@ -312,12 +312,15 @@ class DatabaseInvestigationActions:
 		provider = frappe.db.get_value("Virtual Machine", virtual_machine, "cloud_provider")
 
 		virtual_machine_doc: VirtualMachine = frappe.get_cached_doc("Virtual Machine", virtual_machine)
-		if provider == "AWS EC2":
-			virtual_machine_doc.reboot_with_serial_console()
-		else:
-			virtual_machine_doc.reboot()
+		try:
+			if provider == "AWS EC2":
+				virtual_machine_doc.reboot_with_serial_console()
+			else:
+				virtual_machine_doc.reboot()
+			step.status = StepStatus.Success
+		except Exception:
+			step.status = StepStatus.Failure
 
-		step.status = StepStatus.Success
 		step.save()
 
 	def add_database_server_investigation_actions(self):
@@ -326,9 +329,13 @@ class DatabaseInvestigationActions:
 			- Unreachable or missing metrics from promethues results in a database server reboot
 			- Busy resources result in a mariadb reboot post a process list capture.
 		"""
-		if any(
-			[step for step in self.investigator.database_investigation_steps if step.is_unable_to_investigate]
-		):
+		database_resource_investigation_steps = [
+			step
+			for step in self.investigator.database_investigation_steps
+			if step.method != PrometheusInvestigationHelper.has_high_disk_usage.__name__
+		]  # If all resource investigation steps have missing data then just reboot?
+
+		if all([step.is_unable_to_investigate for step in database_resource_investigation_steps]):
 			# We need to think about missing data from prometheus here?
 			for step in self.investigator.get_steps([self.initiate_database_reboot]):
 				self.investigator.append("action_steps", step)
@@ -337,24 +344,19 @@ class DatabaseInvestigationActions:
 			return
 
 		database_likely_causes = set(self.investigator.likely_causes["database"])
-		if (
-			database_likely_causes
-			and database_likely_causes.issubset(
-				{
-					PrometheusInvestigationHelper.has_high_cpu_load.__name__,
-					PrometheusInvestigationHelper.has_high_memory_usage.__name__,
-					PrometheusInvestigationHelper.has_high_system_load.__name__,
-				}
-			)
-			and database_likely_causes
-			!= {
-				PrometheusInvestigationHelper.has_high_memory_usage.__name__
-			}  # This ensure that memory high is not the only likely cause
-		):  # don't trigger this only for high memory issues
-			for step in self.investigator.get_steps(
-				[self.capture_process_list, self.initiate_database_reboot]
-			):
-				self.investigator.append("action_steps", step)
+		if database_likely_causes:
+			all_three_causes = {
+				PrometheusInvestigationHelper.has_high_cpu_load.__name__,
+				PrometheusInvestigationHelper.has_high_memory_usage.__name__,
+				PrometheusInvestigationHelper.has_high_system_load.__name__,
+			}
+
+			# Check if all three causes are identified
+			if database_likely_causes.issubset(all_three_causes):
+				for step in self.investigator.get_steps(
+					[self.capture_process_list, self.initiate_database_reboot]
+				):
+					self.investigator.append("action_steps", step)
 
 		self.investigator.save()
 

@@ -7,16 +7,10 @@ import pluginRewriteAll from 'vite-plugin-rewrite-all';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import vueDevTools from 'vite-plugin-vue-devtools'
 import dotenv from 'dotenv';
-<<<<<<< HEAD
-import UnpluginComponents from 'unplugin-vue-components/vite';
-import { visualizer } from 'rollup-plugin-visualizer';
-=======
->>>>>>> f2f423849 (fix(dependency): Remove rollup visualiser)
 dotenv.config();
 
 export default defineConfig({
 	plugins: [
-		UnpluginComponents({ dirs: [] }),
 		frappeui({
 			frappeProxy: true,
 			lucideIcons: true,

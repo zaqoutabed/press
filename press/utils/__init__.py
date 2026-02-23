@@ -964,7 +964,96 @@ def servers_using_alternative_port_for_communication() -> list:
 	return [x.strip() for x in sl if x.strip()]
 
 
-def get_nearest_cluster():
+def _get_timezone_offset_seconds(timezone_name: str, now_utc: datetime) -> float | None:
+	"""
+	Returns the timezone offset in seconds for a given timezone name and current UTC time
+	eg: for Asia/Kolkata, it will return 19800 (5 hours 30 minutes in seconds)
+	"""
+	from zoneinfo import ZoneInfo
+
+	try:
+		tz_offset = now_utc.astimezone(ZoneInfo(timezone_name)).utcoffset()
+	except Exception:
+		return None
+
+	if tz_offset is None:
+		return None
+
+	return tz_offset.total_seconds()
+
+
+def _get_country_offsets(timezones: list[str], now_utc: datetime) -> list[float]:
+	"""
+	Returns list of timezone offsets in seconds for a given list of timezone names and current UTC time
+	eg: for ["Asia/Kolkata", "Asia/Delhi"], it will return [19800, 19800]
+	"""
+	offsets: list[float] = []
+	for timezone_name in timezones:
+		offset_seconds = _get_timezone_offset_seconds(timezone_name, now_utc)
+		if offset_seconds is not None:
+			offsets.append(offset_seconds)
+	return offsets
+
+
+def _get_closest_cluster_by_offsets(country_offsets: list[float], now_utc: datetime) -> str | None:
+	"""
+	Returns the closest cluster for a given list of country timezone offsets and current UTC time
+	"""
+	closest_cluster = None
+	closest_diff = float("inf")
+
+	CLUSTER_TIMEZONES = {
+		"Mumbai": "Asia/Kolkata",
+		"Zurich": "Europe/Zurich",
+		"Frankfurt": "Europe/Berlin",
+		"Singapore": "Asia/Singapore",
+		"London": "Europe/London",
+		"Virginia": "America/New_York",
+		"Jakarta": "Asia/Jakarta",
+		"Bahrain": "Asia/Bahrain",
+		"UAE": "Asia/Dubai",
+		"KSA": "Asia/Riyadh",
+		"Cape Town": "Africa/Johannesburg",
+		"Johannesburg": "Africa/Johannesburg",
+	}
+
+	for cluster_name, cluster_timezone in CLUSTER_TIMEZONES.items():
+		cluster_seconds = _get_timezone_offset_seconds(cluster_timezone, now_utc)
+		if cluster_seconds is None:
+			continue
+
+		diff = min(abs(cluster_seconds - country_seconds) for country_seconds in country_offsets)
+		if diff < closest_diff:
+			closest_diff = diff
+			closest_cluster = cluster_name
+
+	return closest_cluster
+
+
+def get_nearest_cluster_for_country(country: str | None) -> str | None:
+	"""
+	Returns the nearest cluster for a given country based on timezone information.
+	If country has multiple timezones, it considers all of them and returns the cluster with the closest timezone offset to any of the country's timezones.
+	"""
+	from frappe.geo.country_info import get_country_info as get_frappe_country_info
+
+	if not country:
+		return None
+
+	country_info = get_frappe_country_info(country) or {}
+	timezones = country_info.get("timezones") or []
+	if not timezones:
+		return None
+
+	now_utc = datetime.now(pytz.utc)
+	country_offsets = _get_country_offsets(timezones, now_utc)
+	if not country_offsets:
+		return None
+
+	return _get_closest_cluster_by_offsets(country_offsets, now_utc)
+
+
+def get_nearest_cluster_for_ip() -> str | None:
 	import math
 
 	cluster_locations = {
@@ -1022,3 +1111,10 @@ def get_nearest_cluster():
 			nearest_cluster = cluster_name
 
 	return nearest_cluster
+
+
+def get_nearest_cluster(country: str | None = None):
+	if country and (nearest_cluster_for_country := get_nearest_cluster_for_country(country)):
+		return nearest_cluster_for_country
+
+	return get_nearest_cluster_for_ip()

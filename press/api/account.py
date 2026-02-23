@@ -557,15 +557,6 @@ def current_team():
 	return get("Team", frappe.local.team().name)
 
 
-@frappe.whitelist()
-def has_method_permission(doctype, docname, method) -> bool:
-	from press.press.doctype.press_permission_group.press_permission_group import (
-		has_method_permission,
-	)
-
-	return has_method_permission(doctype, docname, method)
-
-
 @frappe.whitelist(allow_guest=True)
 def signup_settings(product=None, fetch_countries=False, timezone=None):
 	from press.utils.country_timezone import get_country_from_timezone

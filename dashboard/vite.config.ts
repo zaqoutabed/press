@@ -7,8 +7,11 @@ import pluginRewriteAll from 'vite-plugin-rewrite-all';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import vueDevTools from 'vite-plugin-vue-devtools'
 import dotenv from 'dotenv';
+<<<<<<< HEAD
 import UnpluginComponents from 'unplugin-vue-components/vite';
 import { visualizer } from 'rollup-plugin-visualizer';
+=======
+>>>>>>> f2f423849 (fix(dependency): Remove rollup visualiser)
 dotenv.config();
 
 export default defineConfig({
@@ -38,7 +41,6 @@ export default defineConfig({
 		}),
 		,
 		...(process.env.ENABLE_VUE_DEVTOOLS ? [vueDevTools()] : []),
-		...(process.env.OPEN_DEPENDENCY_VISUALIZER ? [visualizer({ open: true })] : []),
 	],
 	server: {
 		allowedHosts: true

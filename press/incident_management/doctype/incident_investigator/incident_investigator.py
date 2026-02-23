@@ -302,7 +302,7 @@ class PrometheusInvestigationHelper:
 			)
 		'''
 		metric_data = self._fetch_with_time_shifts(
-			fetch_fn=self.prometheus_client.custom_query, shifts=[2, 5], query=query
+			fetch_fn=self.prometheus_client.custom_query_range, shifts=[2, 5], query=query
 		)
 		if not metric_data:
 			return None
@@ -364,7 +364,7 @@ class DatabaseInvestigationActions:
 		step.status = StepStatus.Running
 		step.save()
 
-		server: Server = frappe.get_cached_doc("Database Server", self.investigator.server)
+		server: Server = frappe.get_cached_doc("Server", self.investigator.server)
 		benches = frappe.get_all("Bench", {"server": server.name, "status": "Active"}, pluck="name")
 
 		try:
@@ -405,7 +405,7 @@ class DatabaseInvestigationActions:
 			PrometheusInvestigationHelper.has_high_system_load.__name__,
 		}
 		database_likely_causes = set(self.investigator.likely_causes["database"])
-		if database_likely_causes and database_likely_causes.issubset(resource_causes):
+		if database_likely_causes and database_likely_causes.intersection(resource_causes):
 			for step in self.investigator.get_steps(
 				[self.capture_process_list, self.initiate_database_reboot, self.restart_benches]
 			):
@@ -535,7 +535,7 @@ class AppServerInvestigationActions:
 
 		app_server_likely_causes = set(self.investigator.likely_causes["server"])
 
-		if app_server_likely_causes and app_server_likely_causes.issubset(resource_causes):
+		if app_server_likely_causes and app_server_likely_causes.intersection(resource_causes):
 			for step in self.investigator.get_steps(
 				[self.get_bench_memory_usage_data, self.get_oom_kill_events]
 			):

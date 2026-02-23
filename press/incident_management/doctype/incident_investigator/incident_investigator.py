@@ -57,6 +57,8 @@ def get_utc_time(time: datetime.datetime) -> datetime.datetime:
 
 @dataclass
 class PrometheusInvestigationHelper:
+	"""Helper class to perform prometheus queries"""
+
 	high_system_load_threshold: int
 	high_cpu_load_threshold: int
 	high_memory_usage_threshold: int
@@ -357,6 +359,26 @@ class DatabaseInvestigationActions:
 
 		step.save()
 
+	def restart_benches(self, step: "ActionStep"):
+		"""Restart benches since framework sometimes is not able to establish connection after reboot"""
+		step.status = StepStatus.Running
+		step.save()
+
+		server: Server = frappe.get_cached_doc("Database Server", self.investigator.server)
+		benches = frappe.get_all("Bench", {"server": server.name, "status": "Active"}, pluck="name")
+
+		try:
+			ansible = Ansible(
+				playbook="start_benches.yml",
+				server=server,
+				user=server._ssh_user(),
+				port=server._ssh_port(),
+				variables={"benches": " ".join(benches)},
+			)
+			self.investigator.handle_ansible_play(step, ansible)
+		except Exception as e:
+			self.investigator._fail_ansible_step(step, ansible, e)
+
 	def add_database_server_investigation_actions(self):
 		"""
 		In case of database resource incidents we do the following
@@ -385,7 +407,7 @@ class DatabaseInvestigationActions:
 		database_likely_causes = set(self.investigator.likely_causes["database"])
 		if database_likely_causes and database_likely_causes.issubset(resource_causes):
 			for step in self.investigator.get_steps(
-				[self.capture_process_list, self.initiate_database_reboot]
+				[self.capture_process_list, self.initiate_database_reboot, self.restart_benches]
 			):
 				self.investigator.append("action_steps", step)
 
@@ -518,6 +540,8 @@ class AppServerInvestigationActions:
 				[self.get_bench_memory_usage_data, self.get_oom_kill_events]
 			):
 				self.investigator.append("action_steps", step)
+
+		self.investigator.save()
 
 
 class CommonInvestigationActions:
@@ -731,7 +755,10 @@ class IncidentInvestigator(Document, StepHandler):
 				self.doctype,
 				self.name,
 				"_execute_steps",
-				method_objects=[database_investigation_actions],
+				method_objects=[
+					database_investigation_actions,
+					app_server_investigation_actions,
+				],
 				start_status=Status.REACTING,
 				success_status=Status.COMPLETED,
 				failure_status=Status.COMPLETED,  # We mark any failed step also as completed investigation

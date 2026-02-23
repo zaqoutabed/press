@@ -212,6 +212,7 @@ class TestIncidentInvestigator(FrappeTestCase):
 		cls.virtual_machine = create_test_virtual_machine()
 		cls.server.virtual_machine = cls.virtual_machine.name
 		cls.server.save()
+		frappe.db.set_single_value("Press Settings", "execute_incident_action", 1)
 
 	@patch.object(IncidentInvestigator, "after_insert", Mock())
 	def test_investigation_creation_on_incident_creation(self):
@@ -239,8 +240,6 @@ class TestIncidentInvestigator(FrappeTestCase):
 			self.assertTrue(step.is_likely_cause)
 
 		self.assertEqual(investigator.status, "Completed")
-		# Since disk is a part of the high metrics we won't be taking any actions on db either since reboot might be a wasted effort if only 2GB of disk is left
-		self.assertEqual(investigator.action_steps, [])
 		self.assertEqual(
 			frappe.get_doc("Incident", investigator.incident).phone_call, True
 		)  # Ensure we get calls in case everything is high
@@ -406,6 +405,22 @@ class TestIncidentInvestigator(FrappeTestCase):
 
 			# Ensure database action is taken in case of unreachable metrics
 			self.assertEqual(len(investigator.action_steps), 1)
+
+	@patch.object(PrometheusConnect, "get_current_metric_value", mock_disk_usage(is_high=True))
+	@patch.object(PrometheusConnect, "custom_query_range", make_custom_query_range_side_effect(is_high=False))
+	@patch.object(PrometheusConnect, "get_metric_range_data", mock_system_load(is_high=False))
+	@patch(
+		"press.incident_management.doctype.incident_investigator.incident_investigator.frappe.enqueue_doc",
+		foreground_enqueue_doc,
+	)
+	def test_no_action_on_only_disk_crisis(self):
+		"""Test all the action steps were executed successfully and investigation is marked completed"""
+		create_test_incident(self.server.name)
+		investigator: IncidentInvestigator = frappe.get_last_doc("Incident Investigator")
+
+		self.assertEqual(len(investigator.action_steps), 0)
+
+		self.assertEqual(investigator.status, "Completed")
 
 	@classmethod
 	def tearDownClass(cls):

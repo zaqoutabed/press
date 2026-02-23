@@ -907,11 +907,7 @@ def get_rounded_boundary(dt: datetime, timegrain=60):
 	return datetime.fromtimestamp(floored_ts, tz=dt.tzinfo)
 
 
-<<<<<<< HEAD
-def get_uptime(site, timezone, start, end, timegrain):
-=======
 def get_uptime(site, timezone, start: datetime, end: datetime, timegrain):
->>>>>>> 02d834d53 (fix(uptime-chart): Add chunking and pagination)
 	monitor_server = frappe.db.get_single_value("Press Settings", "monitor_server")
 	if not monitor_server:
 		return []
@@ -919,8 +915,6 @@ def get_uptime(site, timezone, start: datetime, end: datetime, timegrain):
 	url = f"https://{monitor_server}/prometheus/api/v1/query_range"
 	password = get_decrypted_password("Monitor Server", monitor_server, "grafana_password")
 
-<<<<<<< HEAD
-=======
 	# align to beginning of day of start date
 	start = start.astimezone(pytz_timezone(timezone)).replace(hour=0, minute=0, second=0, microsecond=0)
 	# align to end of day of end date
@@ -932,7 +926,6 @@ def get_uptime(site, timezone, start: datetime, end: datetime, timegrain):
 	if (end - start).days >= 30:
 		timegrain = 86400
 
->>>>>>> 02d834d53 (fix(uptime-chart): Add chunking and pagination)
 	query = {
 		"query": (
 			f'sum(sum_over_time(probe_success{{job="site", instance="{site}"}}[{timegrain}s])) by (instance) / sum(count_over_time(probe_success{{job="site", instance="{site}"}}[{timegrain}s])) by (instance)'

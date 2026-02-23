@@ -22,9 +22,8 @@
 			</div>
 			<slot name="action"></slot>
 		</div>
-		<div class="flex items-center justify-center flex-grow">
-			<slot></slot>
-		</div>
+
+		<slot></slot>
 	</div>
 </template>
 

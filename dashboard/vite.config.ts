@@ -7,6 +7,10 @@ import pluginRewriteAll from 'vite-plugin-rewrite-all';
 import { sentryVitePlugin } from '@sentry/vite-plugin';
 import vueDevTools from 'vite-plugin-vue-devtools'
 import dotenv from 'dotenv';
+<<<<<<< HEAD
+=======
+import { visualizer } from 'rollup-plugin-visualizer';
+>>>>>>> 9a0437299 (fix(icons): Remove unplugin configuration)
 dotenv.config();
 
 export default defineConfig({

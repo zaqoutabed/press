@@ -682,7 +682,7 @@ def get(name, timezone, start, end):
 		"usage_counter": [{"value": r.max, "date": r.date} for r in request_data],
 		"request_count": [{"value": r.count, "date": r.date} for r in request_data],
 		"request_cpu_time": [{"value": r.duration, "date": r.date} for r in request_data],
-		"uptime": (uptime_data + [{}] * 60)[:60],
+		"uptime": uptime_data,
 		"plan_limit": plan_limit,
 	}
 

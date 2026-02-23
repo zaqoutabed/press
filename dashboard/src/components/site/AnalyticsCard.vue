@@ -22,14 +22,11 @@
 			</div>
 			<slot name="action"></slot>
 		</div>
-<<<<<<< HEAD
 		<div class="flex items-center justify-center flex-grow">
 			<slot></slot>
 		</div>
-=======
 
 		<slot></slot>
->>>>>>> 7a8c590fe (fix(uptime-chart): Add flexbox to site uptime natively)
 	</div>
 </template>
 

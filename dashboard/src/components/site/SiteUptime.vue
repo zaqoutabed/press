@@ -1,4 +1,5 @@
 <template>
+<<<<<<< HEAD
 	<div v-if="!data || data[0].date === undefined" class="flex h-5/6 items-center justify-center">
 		<div class="text-base text-gray-700">No data</div>
 	</div>
@@ -71,6 +72,126 @@
 			</div>
 		</div>
 	</template>
+=======
+	<div class="flex items-center justify-center flex-grow">
+		<div
+			v-if="!data || data[0].date === undefined"
+			class="flex h-5/6 items-center justify-center"
+		>
+			<div class="text-base text-gray-700">No data</div>
+		</div>
+		<template v-else-if="filteredData?.length > 0">
+			<div
+				class="w-full h-full flex flex-col justify-center items-center px-5 py-3"
+			>
+				<div
+					class="flex justify-between mb-1 w-full text-[11px] text-gray-700 font-normal mt-1"
+				>
+					<div>
+						<template v-if="hoveringOn.key">
+							<span
+								class="contrast-75 font-bold"
+								:class="hoveringOn.colour || []"
+							>
+								{{
+									(hoveringOn.value * 100).toFixed(
+										hoveringOn.value === 0 || hoveringOn.value === 1 ? 0 : 2,
+									)
+								}}%
+							</span>
+							<span class="opacity-30">&#x2022;</span>
+							{{ hoveringOn.prettyDate }}
+						</template>
+					</div>
+					<div class="text-[11px] whitespace-nowrap flex gap-1 items-center">
+						<span>{{ subtitle }}</span>
+						<Tooltip
+							:text="`Aggregated over ${firstDateTime} to ${lastDateTime}`"
+						>
+							<Help />
+						</Tooltip>
+					</div>
+				</div>
+				<div
+					class="flex items-center justify-center w-full h-1/3 max-h-24 gap-1"
+				>
+					<Button
+						v-if="chunkedData.length > 1"
+						@click="scrollPrev"
+						:disabled="currentChunkIndex === 0"
+						class="rounded-full h-8 w-8"
+					>
+						<Left />
+					</Button>
+
+					<div
+						ref="scrollContainer"
+						class="flex h-full overflow-x-auto snap-x snap-mandatory no-scrollbar flex-grow"
+					>
+						<div
+							v-for="(group, index) in chunkedData"
+							:key="index"
+							class="flex w-full flex-shrink-0 snap-start justify-center"
+							:class="chunkedData.length > 1 && 'px-2'"
+						>
+							<div
+								v-for="d in group"
+								:key="d.date"
+								@mouseenter="inspectBar(d)"
+								@mouseleave="clearInspect()"
+								class="rounded-full flex-shrink-0 h-full"
+								:style="`width: ${barWidth};`"
+								:class="[
+									'hover:brightness-[110%] border-r border-white',
+									d.value === undefined
+										? 'bg-gray-100'
+										: d.value === 1
+											? 'bg-green-500'
+											: d.value === 0
+												? 'bg-red-500'
+												: 'bg-yellow-500',
+								]"
+							>
+								<Tooltip
+									placement="bottom"
+									:text="`${hoveringOn.percentValue}% aggregated for ~${interval} (until ${hoveringOn.prettyDate})`"
+								>
+									<div class="h-full w-full" />
+								</Tooltip>
+							</div>
+						</div>
+					</div>
+
+					<Button
+						v-if="chunkedData.length > 1"
+						@click="scrollNext"
+						:disabled="currentChunkIndex === chunkedData.length - 1"
+						class="rounded-full h-8 w-8"
+					>
+						<Right />
+					</Button>
+				</div>
+				<div
+					class="flex justify-between w-full text-[11px] text-gray-700 font-normal mt-1"
+				>
+					<div
+						class="flex-shrink transition-all duration-300 bg-gray-200"
+						:class="highlightDates ? 'bg-opacity-100' : 'bg-opacity-0'"
+					>
+						{{ firstDateTime }}
+					</div>
+
+					<div
+						class="w-fit flex-shrink transition-all duration-300 bg-gray-200"
+						:class="highlightDates ? 'bg-opacity-100' : 'bg-opacity-0'"
+					>
+						{{ lastDateTime }}
+					</div>
+				</div>
+			</div>
+		</template>
+	</div>
+>>>>>>> 7a8c590fe (fix(uptime-chart): Add flexbox to site uptime natively)
 </template>
 
 <script>
@@ -88,7 +209,11 @@ export default {
 	},
 	data() {
 		return {
+<<<<<<< HEAD
 			chunkSize: 30,
+=======
+			chunkSize: 90,
+>>>>>>> 7a8c590fe (fix(uptime-chart): Add flexbox to site uptime natively)
 			currentChunkIndex: 0,
 			hoveringOn: {
 				key: null, // (== date)
@@ -145,7 +270,11 @@ export default {
 		},
 		filteredData() {
 			if (!this.data?.length) return [];
+<<<<<<< HEAD
 			return this.data;
+=======
+			return this.data.filter((obj) => !!obj.value);
+>>>>>>> 7a8c590fe (fix(uptime-chart): Add flexbox to site uptime natively)
 		},
 		chunkedData() {
 			const size = this.chunkSize;

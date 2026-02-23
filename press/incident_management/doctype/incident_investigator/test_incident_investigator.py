@@ -198,6 +198,9 @@ def make_custom_query_range_side_effect(
 @patch.object(Incident, "identify_problem", Mock())
 @patch.object(Incident, "take_grafana_screenshots", Mock())
 @patch.object(VirtualMachine, "reboot_with_serial_console", Mock())
+@patch(
+	"press.incident_management.doctype.incident_investigator.incident_investigator.frappe.db.commit", Mock()
+)
 class TestIncidentInvestigator(FrappeTestCase):
 	@classmethod
 	def setUpClass(cls):

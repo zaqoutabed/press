@@ -261,13 +261,14 @@ class TestIncidentInvestigator(FrappeTestCase):
 				self.assertTrue(step.is_likely_cause)
 
 		self.assertEqual(investigator.status, "Completed")
-		self.assertEqual(len(investigator.action_steps), 4)  # Investigate benches memory as well
+		self.assertEqual(len(investigator.action_steps), 5)  # Investigate benches memory as well
 
 		self.assertListEqual(
 			[step.method_name for step in investigator.action_steps],
 			[
 				"capture_process_list",
 				"initiate_database_reboot",
+				"restart_benches",
 				"get_bench_memory_usage_data",
 				"get_oom_kill_events",
 			],
@@ -296,13 +297,14 @@ class TestIncidentInvestigator(FrappeTestCase):
 				self.assertTrue(step.is_likely_cause)
 
 		# Since database has high memory and high cpu add database action step
-		self.assertEqual(len(investigator.action_steps), 4)  # App server actions
+		self.assertEqual(len(investigator.action_steps), 5)  # App server actions
 
 		self.assertListEqual(
 			[step.method_name for step in investigator.action_steps],
 			[
 				"capture_process_list",
 				"initiate_database_reboot",
+				"restart_benches",
 				"get_bench_memory_usage_data",
 				"get_oom_kill_events",
 			],

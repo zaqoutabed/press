@@ -3,7 +3,7 @@
 		:id="slugifiedTitle"
 		class="group"
 		:class="[
-			'rounded-md border duration-700 ring-blue-500',
+			'rounded-md border duration-700 ring-blue-500 flex flex-col',
 			shouldHighlight && 'ring-1',
 		]"
 	>
@@ -22,6 +22,7 @@
 
 			<slot name="action"></slot>
 		</div>
+
 		<slot></slot>
 	</div>
 </template>
